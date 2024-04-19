@@ -25,8 +25,7 @@ def quantize(build_dir, quant_mode, batchsize):
 
     # Load trained LeNet-5 model
     model = LeNet5().to(device)
-    model.load_state_dict(torch.load(os.path.join(float_model, 'f_model.pth')))
-    #model.load_state_dict(torch.load(args.weights, map_location=device))
+    model.load_state_dict(torch.load(os.path.join(float_model, 'mnist_0.9869.pkl')))
 
     # Force to merge BN with CONV for better quantization accuracy
     optimize = 1
@@ -35,21 +34,22 @@ def quantize(build_dir, quant_mode, batchsize):
     if quant_mode == 'test':
         batchsize = 1
 
-    rand_in = torch.randn([batchsize, 1, 32, 32])  # Use 32x32 input for LeNet-5
+    rand_in = torch.randn([batchsize, 1, 28, 28])  # Use 28x28 input for LeNet-5
     quantizer = torch_quantizer(quant_mode, model, (rand_in), output_dir=quant_model)
     quantized_model = quantizer.quant_model
 
     # Data loader
-    test_dataset = torchvision.datasets.MNIST(dset_dir, train=False, download=True, transform=test_transform_32x32)
+    test_dataset = torchvision.datasets.MNIST(dset_dir, train=False, download=True, transform=test_transform)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batchsize, shuffle=False)
-
-    # Evaluate
-    test(quantized_model, device, test_loader)
 
     # Export config
     if quant_mode == 'calib':
+        test_loss, accuracy = test(quantized_model, device, test_loader)
         quantizer.export_quant_config()
     if quant_mode == 'test':
+        # Evaluate
+        test_loss, accuracy = test(quantized_model, device, test_loader)
+        print("Accuracy is {}, Loss is {}".format(accuracy, test_loss))
         quantizer.export_xmodel(deploy_check=False, output_dir=quant_model)
 
     return

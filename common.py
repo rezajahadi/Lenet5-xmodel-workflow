@@ -25,61 +25,40 @@ import torchvision
 from torchvision import transforms
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn import Module
 
-
-class LeNet5(nn.Module):
+# LeNet5 Model definition
+class LeNet5(Module):
     def __init__(self):
         super(LeNet5, self).__init__()
-        self.conv1 = nn.Conv2d(1, 6, kernel_size=5)
+        self.conv1 = nn.Conv2d(1, 6, kernel_size=5, stride=1)
         self.relu1 = nn.ReLU()
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.conv2 = nn.Conv2d(6, 16, kernel_size=5)
+        self.pool1 = nn.MaxPool2d(2)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=5, stride=1)
         self.relu2 = nn.ReLU()
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.pool2 = nn.MaxPool2d(2)
+        self.fc1   = nn.Linear(256, 120)
         self.relu3 = nn.ReLU()
-        self.fc2 = nn.Linear(120, 84)
+        self.fc2   = nn.Linear(120, 84)
         self.relu4 = nn.ReLU()
-        self.fc3 = nn.Linear(84, 10)
+        self.fc3   = nn.Linear(84, 10)
+        self.relu5 = nn.ReLU()
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.pool1(x)
-        x = self.conv2(x)
-        x = self.relu2(x)
-        x = self.pool2(x)
-        x = x.view(-1, 16 * 5 * 5)
-        x = self.fc1(x)
-        x = self.relu3(x)
-        x = self.fc2(x)
-        x = self.relu4(x)
-        x = self.fc3(x)
-        return x
-
-
-class CNN(nn.Module):
-    def __init__(self):
-        super(CNN, self).__init__()
-
-        self.network = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=5, stride=2, padding=1),
-            nn.BatchNorm2d(16),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(16, 32, kernel_size=5, stride=2, padding=1),
-            nn.BatchNorm2d(32),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(64, 10, kernel_size=3, stride=3),
-            nn.BatchNorm2d(10),
-            nn.Flatten()
-            )
-    def forward(self, x):
-        x = self.network(x)
-        return x
-
+        y = self.conv1(x)
+        y = self.relu1(y)
+        y = self.pool1(y)
+        y = self.conv2(y)
+        y = self.relu2(y)
+        y = self.pool2(y)
+        y = y.view(y.shape[0], -1)
+        y = self.fc1(y)
+        y = self.relu3(y)
+        y = self.fc2(y)
+        y = self.relu4(y)
+        y = self.fc3(y)
+        y = self.relu5(y)
+        return y
 
 # def train(model, device, train_loader, optimizer, epoch):
 #     '''
@@ -153,14 +132,24 @@ def test(model, device, test_loader):
     accuracy = correct / len(test_loader.dataset)
     return test_loss, accuracy
 
-train_transform_32x32 = transforms.Compose([
-        transforms.Resize((32, 32)),
+# train_transform_32x32 = transforms.Compose([
+#         transforms.Resize((32, 32)),
+#         transforms.ToTensor(),
+#         transforms.Normalize((0.5,), (0.5,))
+#     ])
+
+# test_transform_32x32 = transforms.Compose([
+#         transforms.Resize((32, 32)),
+#         transforms.ToTensor(),
+#         transforms.Normalize((0.5,), (0.5,))
+#     ])
+
+train_transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
     ])
 
-test_transform_32x32 = transforms.Compose([
-        transforms.Resize((32, 32)),
+test_transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
     ])
